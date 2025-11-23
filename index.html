@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QRIS Viewer & Saver — Single File</title>
+<link rel="manifest" href="manifest.webmanifest">
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#06b6d4}
+    html,body{background:linear-gradient(180deg,#071028 0%, #071a2a 100%);color:#e6eef6;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;padding:18px;min-height:100vh;box-sizing:border-box;}
+    body{background:linear-gradient(180deg,#071028 0%, #071a2a 100%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:18px}
+    .app{width:100%;max-width:980px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    header h1{font-size:18px;margin:0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);min-height:320px;display:flex;flex-direction:column}
+    .qr-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:8px}
+    .qr{width:100%;max-width:320px;height:auto;border-radius:8px;background:white;padding:6px;display:block}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button, input[type=file], label{background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .small{padding:6px 8px;font-size:13px}
+    .muted{color:var(--muted);font-size:13px}
+    .row{display:flex;gap:8px;align-items:center}
+    .actions{display:flex;gap:8px;align-items:center;margin-top:12px}
+    textarea{width:100%;min-height:54px;border-radius:8px;padding:8px;background:transparent;border:1px dashed rgba(255,255,255,0.04);color:inherit}
+    .fullscr{position:fixed;inset:0;background:#000000dd;display:none;align-items:center;justify-content:center;z-index:9999}
+    .fullscr img{max-width:98%;max-height:98%}
+    input[type=file]{display:none}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .hint{font-size:13px;color:var(--muted)}
+    footer{margin-top:12px;color:var(--muted);font-size:13px}
+    .btn-primary{background:linear-gradient(90deg,#06b6d4,#3b82f6);color:#032; border:none}
+    @media (max-width:480px){.card{min-height:260px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <header>
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden><rect width="24" height="24" rx="6" fill="#06b6d4"/></svg>
+        <div>
+          <h1>QRIS Viewer & Saver (single-file)</h1>
+          <div class="hint">Simpan ke perangkat, tampilkan untuk discan, dan ekspor/import data (base64) — tanpa server.</div>
+        </div>
+      </header>
+      <div style="text-align:right">
+        <button id="exportJson" class="small">Export backup</button>
+        <label for="importFile" class="small" style="margin-left:8px">Import</label>
+        <input id="importFile" type="file" accept="application/json" />
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- QR Slot 1 -->
+      <section class="card" id="slot1">
+        <strong>QRIS 1</strong>
+        <div class="qr-wrap">
+          <img id="img1" class="qr" alt="QRIS 1" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='100%' height='100%' fill='%23ffffff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='18' fill='%23000000'>No QR loaded</text></svg>" />
+        </div>
+
+        <div class="controls">
+          <label for="file1" class="small">Upload</label>
+          <input id="file1" type="file" accept="image/*" />
+
+          <button id="paste1" class="small">Paste image URL / data:</button>
+          <button id="download1" class="small">Download image</button>
+          <button id="fullscreen1" class="small">Fullscreen</button>
+        </div>
+
+        <div style="margin-top:8px">
+          <textarea id="txt1" placeholder="Tempel URL gambar (http://...) atau data:image/... lalu tekan Simpan"></textarea>
+          <div class="actions">
+            <button id="save1" class="btn-primary small">Simpan ke app</button>
+            <button id="clear1" class="small">Hapus</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- QR Slot 2 -->
+      <section class="card" id="slot2">
+        <strong>QRIS 2</strong>
+        <div class="qr-wrap">
+          <img id="img2" class="qr" alt="QRIS 2" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='100%' height='100%' fill='%23ffffff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='18' fill='%23000000'>No QR loaded</text></svg>" />
+        </div>
+
+        <div class="controls">
+          <label for="file2" class="small">Upload</label>
+          <input id="file2" type="file" accept="image/*" />
+          <button id="paste2" class="small">Paste image URL / data:</button>
+          <button id="download2" class="small">Download image</button>
+          <button id="fullscreen2" class="small">Fullscreen</button>
+        </div>
+
+        <div style="margin-top:8px">
+          <textarea id="txt2" placeholder="Tempel URL gambar (http://...) atau data:image/... lalu tekan Simpan"></textarea>
+          <div class="actions">
+            <button id="save2" class="btn-primary small">Simpan ke app</button>
+            <button id="clear2" class="small">Hapus</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Tips: Untuk menyimpan permanen di ponsel, gunakan tombol "Export backup" untuk mengunduh file .json yang berisi gambar dalam base64. Untuk menampilkan QR agar mudah discan, buka Fullscreen.
+    </footer>
+  </div>
+
+  <div id="full" class="fullscr" onclick="hideFull()"><img id="fullimg" src="" alt="full"></div>
+
+  <script>
+    // Helper: load from localStorage
+    function loadState(){
+      try{
+        const s1 = localStorage.getItem('qris1');
+        const s2 = localStorage.getItem('qris2');
+        if(s1) setImage('img1', s1), document.getElementById('txt1').value = s1;
+        if(s2) setImage('img2', s2), document.getElementById('txt2').value = s2;
+      }catch(e){console.error(e)}
+    }
+
+    function setImage(id, dataUrl){
+      const img = document.getElementById(id);
+      img.src = dataUrl;
+    }
+
+    // File inputs
+    document.getElementById('file1').addEventListener('change', e=>readFile(e.target.files[0], 'img1', 'txt1'))
+    document.getElementById('file2').addEventListener('change', e=>readFile(e.target.files[0], 'img2', 'txt2'))
+
+    function readFile(file, imgId, txtId){
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(){
+        const dataUrl = reader.result;
+        setImage(imgId, dataUrl);
+        document.getElementById(txtId).value = dataUrl;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    // Paste buttons: focus textarea
+    document.getElementById('paste1').addEventListener('click', ()=>{ const t=document.getElementById('txt1'); t.focus(); t.select(); alert('Tempelkan URL gambar atau data:image/... ke kotak teks lalu tekan "Simpan ke app".'); })
+    document.getElementById('paste2').addEventListener('click', ()=>{ const t=document.getElementById('txt2'); t.focus(); t.select(); alert('Tempelkan URL gambar atau data:image/... ke kotak teks lalu tekan "Simpan ke app".'); })
+
+    // Save buttons
+    document.getElementById('save1').addEventListener('click', ()=>{
+      const v = document.getElementById('txt1').value.trim();
+      if(!v){alert('Masukkan URL atau paste data image terlebih dahulu.');return}
+      try{ localStorage.setItem('qris1', v); setImage('img1', v); alert('QRIS 1 disimpan ke app (localStorage). Gunakan Export backup untuk unduhan permanen.'); }catch(e){alert('Gagal menyimpan: '+e);}
+    })
+    document.getElementById('save2').addEventListener('click', ()=>{
+      const v = document.getElementById('txt2').value.trim();
+      if(!v){alert('Masukkan URL atau paste data image terlebih dahulu.');return}
+      try{ localStorage.setItem('qris2', v); setImage('img2', v); alert('QRIS 2 disimpan ke app (localStorage). Gunakan Export backup untuk unduhan permanen.'); }catch(e){alert('Gagal menyimpan: '+e);}    })
+
+    // Clear
+    document.getElementById('clear1').addEventListener('click', ()=>{ if(confirm('Hapus QRIS 1 dari app?')){ localStorage.removeItem('qris1'); setImage('img1', placeholderSvg()); document.getElementById('txt1').value=''; }});
+    document.getElementById('clear2').addEventListener('click', ()=>{ if(confirm('Hapus QRIS 2 dari app?')){ localStorage.removeItem('qris2'); setImage('img2', placeholderSvg()); document.getElementById('txt2').value=''; }});
+
+    function placeholderSvg(){ return "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='100%' height='100%' fill='%23ffffff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='18' fill='%23000000'>No QR loaded</text></svg>" }
+
+    // Download single image
+    function downloadDataUrl(dataUrl, filename){
+      const a=document.createElement('a'); a.href = dataUrl; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    }
+    document.getElementById('download1').addEventListener('click', ()=>{ const src = document.getElementById('img1').src; if(!src) return alert('Tidak ada gambar'); downloadDataUrl(src, 'qris1.png'); });
+    document.getElementById('download2').addEventListener('click', ()=>{ const src = document.getElementById('img2').src; if(!src) return alert('Tidak ada gambar'); downloadDataUrl(src, 'qris2.png'); });
+
+    // Fullscreen view
+    document.getElementById('fullscreen1').addEventListener('click', ()=>{ showFull(document.getElementById('img1').src); });
+    document.getElementById('fullscreen2').addEventListener('click', ()=>{ showFull(document.getElementById('img2').src); });
+    function showFull(src){ if(!src) return alert('Tidak ada gambar'); document.getElementById('fullimg').src = src; document.getElementById('full').style.display = 'flex'; document.body.style.overflow='hidden'}
+    function hideFull(){ document.getElementById('full').style.display='none'; document.body.style.overflow='auto'; }
+    window.hideFull = hideFull;
+
+    // Export backup (JSON with base64 images)
+    document.getElementById('exportJson').addEventListener('click', ()=>{
+      const s1 = localStorage.getItem('qris1') || document.getElementById('img1').src || '';
+      const s2 = localStorage.getItem('qris2') || document.getElementById('img2').src || '';
+      const payload = { exportedAt: (new Date()).toISOString(), qris1: s1, qris2: s2 };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'qris-backup.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    // Import JSON
+    document.getElementById('importFile').addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const reader = new FileReader(); reader.onload = ()=>{
+        try{
+          const parsed = JSON.parse(reader.result);
+          if(parsed.qris1) { localStorage.setItem('qris1', parsed.qris1); setImage('img1', parsed.qris1); document.getElementById('txt1').value = parsed.qris1 }
+          if(parsed.qris2) { localStorage.setItem('qris2', parsed.qris2); setImage('img2', parsed.qris2); document.getElementById('txt2').value = parsed.qris2 }
+          alert('Import selesai. Data disimpan ke app (localStorage).');
+        }catch(err){ alert('File JSON tidak valid: '+err) }
+      }
+      reader.readAsText(f);
+      e.target.value = '';
+    })
+
+    // Init
+    loadState();
+
+    // Allow tapping image to open fullscreen quickly
+    document.getElementById('img1').addEventListener('click', ()=>showFull(document.getElementById('img1').src));
+    document.getElementById('img2').addEventListener('click', ()=>showFull(document.getElementById('img2').src));
+
+    // Prevent accidental navigation loss: warn if there are stored qris
+    window.addEventListener('beforeunload', function(e){ if(localStorage.getItem('qris1')||localStorage.getItem('qris2')){ /* no-op */ } });
+  if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker registered"))
+        .catch(err => console.error("SW registration failed:", err));
+    }
+</script>
+</body>
+</html>
